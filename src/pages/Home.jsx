@@ -2,15 +2,29 @@ import { IoCloudUploadOutline } from "react-icons/io5";
 import { FaFolder, FaTrash } from "react-icons/fa";
 import { useState } from "react";
 import { MdModeEdit } from "react-icons/md";
+import { v4 as uuidv4 } from "uuid";
+
 
 const Home = () => {
-  const [images, setImages] = useState({});
-  const [image, setImage] = useState(null);
+  const [images, setImages] = useState([]);
   const handleChange = (e) => {
-    const file = e.target.files[0];
-    console.log("Selected file:", file);
-    setImage(file);
+    const files = Array.from(e.target.files);
+
+    const mapped = files.map(file => ({
+      id: uuidv4(),
+      name: file.name,
+      size: file.size,
+      type: file.type,
+      preview: URL.createObjectURL(file)
+    }))
+    setImages((prev) => [...prev, ...mapped]);
+
   };
+
+  const handleDelete = (id) => {
+    setImages((prev) => prev.filter((image) => image.id !== id))
+  }
+
   return (
     <div className="min-h-screen flex flex-col items-center p-6">
       {/* Image uploader container */}
@@ -28,6 +42,7 @@ const Home = () => {
             type="file"
             name="image"
             id="image"
+            multiple
             accept="image/*"
             className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
             onChange={(e) => handleChange(e)}
@@ -35,38 +50,37 @@ const Home = () => {
         </div>
       </div>
       {/* Image container */}
-      <div className="max-w-xs w-full rounded-md border mt-10">
-        <div className="border-b">
-            {image ? (
-              <img
-                src={URL.createObjectURL(image)}
-                alt="preview"
-                className="w-full h-50 "
-              />
-            ) : (
-              <img
-                src="https://img.freepik.com/free-photo/courage-man-jump-through-gap-hill-business-concept-idea_1323-262.jpg?semt=ais_hybrid&w=740&q=80"
-                alt="preview"
-                className="w-full h-50 "
-              />
-            )}
-        </div>
-        <div className="flex flex-col gap-2 ">
-          {/* Edit button */}
-          <div className="flex justify-between border-b px-3 py-4">
-            <span className="text-xl">Mountain lake</span>
-            <button>
-              <MdModeEdit className="text-blue-500 hover:text-blue-600 active:text-blue-700 hover:scale-105 transition hover:cursor-pointer text-2xl" />
-            </button>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+        {images.map((image) => (
+          <div
+            onClick={() => console.log(image)}
+            key={image.id}
+            className="max-w-xs w-full rounded-md border mt-10">
+            <div className="border-b">
+              <img src={image.preview} className="w-full h-48 object-contain " alt="" />
+            </div>
+            <div className="flex flex-col gap-2 ">
+              {/* Edit button */}
+              <div className="flex justify-between border-b px-3 py-4">
+                <span className="text-[14px]">{image.name}</span>
+                <button>
+                  <MdModeEdit className="text-blue-500 hover:text-blue-600 active:text-blue-700 hover:scale-105 transition hover:cursor-pointer text-2xl" />
+                </button>
+              </div>
+              {/* Delete button */}
+              <div className="flex justify-between gap-4 px-3 py-3">
+                <span className="text-[14px]">{image.type}</span>
+                <span className="text-[14px]">{(image.size / 1024 / 1024).toFixed(2)} MB</span>
+                <button 
+                  onClick={() => handleDelete(image.id)}
+                >
+                  <FaTrash className="text-red-500 hover:text-red-600 active:text-red-700 hover:scale-105 transition hover:cursor-pointer text-2xl" />
+                </button>
+              </div>
+        
+            </div>
           </div>
-          {/* Delete button */}
-          <div className="flex justify-between px-3 py-3">
-            <span className="text-xl">Mountain lake</span>
-            <button>
-              <FaTrash className="text-red-500 hover:text-red-600 active:text-red-700 hover:scale-105 transition hover:cursor-pointer text-2xl" />
-            </button>
-          </div>
-        </div>
+        ))}
       </div>
     </div>
   );
