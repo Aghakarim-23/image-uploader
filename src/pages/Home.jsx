@@ -4,26 +4,36 @@ import { useState } from "react";
 import { MdModeEdit } from "react-icons/md";
 import { v4 as uuidv4 } from "uuid";
 
-
 const Home = () => {
   const [images, setImages] = useState([]);
+  const [editingId, setEditingId] = useState(null);
+  const [editValue, setEditValue] = useState("");
+
+  
   const handleChange = (e) => {
     const files = Array.from(e.target.files);
 
-    const mapped = files.map(file => ({
+    const mapped = files.map((file) => ({
       id: uuidv4(),
       name: file.name,
       size: file.size,
       type: file.type,
-      preview: URL.createObjectURL(file)
-    }))
+      preview: URL.createObjectURL(file),
+    }));
     setImages((prev) => [...prev, ...mapped]);
-
   };
 
   const handleDelete = (id) => {
-    setImages((prev) => prev.filter((image) => image.id !== id))
-  }
+    setImages((prev) => prev.filter((image) => image.id !== id));
+  };
+
+  const handleRename = (id, newName) => {
+    setImages((prev) =>
+      prev.map((image) =>
+        image.id === id ? { ...image, name: newName } : image,
+      ),
+    );
+  };
 
   return (
     <div className="min-h-screen flex flex-col items-center p-6">
@@ -55,29 +65,56 @@ const Home = () => {
           <div
             onClick={() => console.log(image)}
             key={image.id}
-            className="max-w-xs w-full rounded-md border mt-10">
+            className="max-w-xs w-full rounded-md border mt-10"
+          >
             <div className="border-b">
-              <img src={image.preview} className="w-full h-48 object-contain " alt="" />
+              <img
+                src={image.preview}
+                className="w-full h-48 object-contain "
+                alt=""
+              />
             </div>
             <div className="flex flex-col gap-2 ">
               {/* Edit button */}
               <div className="flex justify-between border-b px-3 py-4">
-                <span className="text-[14px]">{image.name}</span>
-                <button>
+                {editingId === image.id ? (
+                  <input
+                    className="border rounded-md pl-2 py-2"
+                    value={editValue}
+                    onChange={(e) => setEditValue(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        handleRename(image.id, editValue);
+                        setEditingId(null);
+                      }
+                    }}
+                  />
+                ) : (
+                  <span className="text-[14px]">{image.name}</span>
+                )}
+                <button
+                  onClick={() => {
+                    setEditingId(image.id);
+                    setEditValue(image.name);
+                  }}
+                >
                   <MdModeEdit className="text-blue-500 hover:text-blue-600 active:text-blue-700 hover:scale-105 transition hover:cursor-pointer text-2xl" />
                 </button>
               </div>
               {/* Delete button */}
               <div className="flex justify-between gap-4 px-3 py-3">
                 <span className="text-[14px]">{image.type}</span>
-                <span className="text-[14px]">{(image.size / 1024 / 1024).toFixed(2)} MB</span>
-                <button 
-                  onClick={() => handleDelete(image.id)}
+                <span className="text-[14px]">
+                  {(image.size / 1024 / 1024).toFixed(2)} MB
+                </span>
+                <button
+                  onClick={() => {
+                    handleDelete(image.id);
+                  }}
                 >
                   <FaTrash className="text-red-500 hover:text-red-600 active:text-red-700 hover:scale-105 transition hover:cursor-pointer text-2xl" />
                 </button>
               </div>
-        
             </div>
           </div>
         ))}
